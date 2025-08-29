@@ -15,47 +15,66 @@ const Index = () => {
     from: new Date(2025, 7, 1), 
     to: new Date(2025, 7, 21),  
   });
+
   const [dashboardStats, setDashboardStats] = useState<any>(null); 
   const [hourlyStats, setHourlyStats] = useState([]);
   const [employeeStats, setEmployeeStats] = useState([]);
   const [departmentStats, setDepartmentStats] = useState([]);
   const [visitorData, setVisitorData] = useState([]);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false); // ✅ nouvel état
 
   useEffect(() => {
     const fetchData = async () => {
+      const formattedDateRange = {
+        from: dateRange.from.toLocaleDateString("en-CA", { timeZone: "Europe/Paris" }),
+        to: dateRange.to.toLocaleDateString("en-CA", { timeZone: "Europe/Paris" })
+      };
+
+      console.log("Sending dateRange:", formattedDateRange);
+
+      setLoading(true); // ✅ on démarre le chargement
+
       try {
         const response = await fetch('http://localhost:3000/api/visitors', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ dateRange }),
+          body: JSON.stringify({ dateRange: formattedDateRange }),
         });
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+
         const data = await response.json();
+        console.log("API Response:", JSON.stringify(data, null, 2));
+
+      
         setVisitorData(data.visitorData || []);
         setHourlyStats(data.hourlyStats || []);
         setEmployeeStats(data.employeeStats || []);
         setDepartmentStats(data.departmentStats || []);
         setDashboardStats(data.dashboardStats || null);
         setError(null);
-      } catch (error) {
+
+      } catch (error: any) {
         console.error('Error fetching data:', error);
         setError(error.message);
+      } finally {
+        setLoading(false); 
       }
     };
+
     fetchData();
   }, [dateRange]);
 
   if (error) return <div>Error: {error}</div>;
-  if (!dashboardStats) return <div>Loading...</div>;
+  if (!dashboardStats) return <div>Chargement initial...</div>; 
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       
-      {/* Dashboard Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
@@ -77,6 +96,7 @@ const Index = () => {
           </div>
         </div>
       </header>
+
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="dashboard-content">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">

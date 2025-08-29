@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     console.log('Attempting login with email:', email, 'to', 'http://localhost:3000/api/login');
     setIsLoading(true);
-    localStorage.removeItem('token'); // Clear any existing token
+    localStorage.removeItem('token'); 
     try {
       const response = await fetch('http://localhost:3000/api/login', {
         method: 'POST',
